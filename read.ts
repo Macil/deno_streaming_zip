@@ -7,6 +7,7 @@ export type ReadEntry = {
   type: "file";
   name: string;
   extendedTimestamps?: ExtendedTimestamps;
+  size: number;
   body: OptionalStream;
 } | {
   type: "directory";
@@ -144,6 +145,7 @@ export async function* read(
           type,
           name: fileName,
           extendedTimestamps: parsedExtraFields.extendedTimestamps,
+          size: uncompressedSize,
           body,
         };
       } else {

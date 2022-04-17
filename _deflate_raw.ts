@@ -1,4 +1,3 @@
-// based on https://github.com/WICG/compression/issues/25
 const GZIP_HEADER = Uint8Array.from([
   31,
   139, // gzip magic

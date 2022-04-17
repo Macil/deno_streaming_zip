@@ -75,6 +75,7 @@ Deno.test("can read test.zip", {
           },
           name: "dril_gpt2_1327347532645756929.txt",
           type: "file",
+          size: 287,
         },
       },
       {
@@ -88,6 +89,7 @@ Deno.test("can read test.zip", {
           },
           name: "dril_1299440247927836672.txt",
           type: "file",
+          size: 152,
         },
       },
       {
@@ -110,6 +112,7 @@ Deno.test("can read test.zip", {
           },
           name: "subdir/draft2.png",
           type: "file",
+          size: 390043,
         },
       },
     ],
