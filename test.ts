@@ -4,39 +4,159 @@ import {
 } from "https://deno.land/std@0.132.0/testing/asserts.ts";
 import { readableStreamFromIterable } from "https://deno.land/std@0.132.0/streams/conversion.ts";
 import { Buffer } from "https://deno.land/std@0.132.0/streams/buffer.ts";
-import { read, ReadEntry } from "./mod.ts";
+import { read, ReadEntry, write, WriteEntry } from "./mod.ts";
+import { Crc32Stream } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
 
-// Deno.test("write -> read", { permissions: {} }, async () => {
-//   async function* entryGenerator(): AsyncGenerator<Entry> {
-//     for (let i = 0; i < 5; i++) {
-//       yield {
-//         name: `item-${i}`,
-//         body: readableStreamFromIterable([
-//           new Uint8Array([i, 1337, i]),
-//           new Uint8Array([1, i]),
-//           new Uint8Array([i, 2]),
-//         ]),
-//       };
-//     }
-//   }
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
-//   const stream = write(entryGenerator());
-//   const iterable = read(stream);
-//   const items = [];
-//   for await (const entry of iterable) {
-//     items.push(entry);
-//     entry.body.cancel();
-//   }
-//   assertEquals(items.length, 5);
-// });
+async function crcStream(stream: ReadableStream<Uint8Array>): Promise<number> {
+  const c = new Crc32Stream();
+  for await (const part of stream) {
+    c.append(part);
+  }
+  return parseInt(c.crc32, 16);
+}
+
+Deno.test("write -> read", { permissions: {} }, async () => {
+  async function* entryGenerator(): AsyncGenerator<WriteEntry> {
+    yield {
+      type: "directory",
+      name: "some-subdir/",
+      extendedTimestamps: {
+        createTime: new Date("2022-03-28T05:37:04.000Z"),
+        accessTime: new Date("2022-03-29T05:37:04.000Z"),
+      },
+    };
+    for (let i = 0; i < 5; i++) {
+      const text = `Contents of item-${i} here!`;
+      const buf = textEncoder.encode(text);
+      const stream = () => {
+        return readableStreamFromIterable([
+          buf.slice(0, 4),
+          buf.slice(4, 11),
+          buf.slice(11),
+        ]);
+      };
+      yield {
+        type: "file",
+        name: `item-${i}`,
+        body: {
+          originalSize: buf.byteLength,
+          originalCrc: await crcStream(stream()),
+          stream: stream(),
+        },
+        extendedTimestamps: i == 0
+          ? {
+            modifyTime: new Date("2022-03-28T06:37:04.000Z"),
+          }
+          : undefined,
+      };
+    }
+  }
+
+  const stream = write(entryGenerator());
+  const iterable = read(stream);
+  const readEntries: { entry: ReadEntry; contents?: string }[] = [];
+  for await (const entry of iterable) {
+    if (entry.type === "file") {
+      const buffer = new Buffer();
+      await entry.body.stream().pipeTo(buffer.writable);
+      const contents = textDecoder.decode(buffer.bytes());
+      readEntries.push({ entry, contents });
+    } else {
+      readEntries.push({ entry });
+    }
+  }
+
+  assertEquals(
+    readEntries.map((r) => ({
+      ...r,
+      entry: { ...r.entry, body: undefined },
+    })),
+    [
+      {
+        entry: {
+          body: undefined,
+          extendedTimestamps: {
+            createTime: new Date("2022-03-28T05:37:04.000Z"),
+            accessTime: new Date("2022-03-29T05:37:04.000Z"),
+          },
+          name: "some-subdir/",
+          type: "directory",
+        },
+      },
+      {
+        contents: "Contents of item-0 here!",
+        entry: {
+          body: undefined,
+          compressedSize: 24,
+          crc: 3715165676,
+          extendedTimestamps: {
+            modifyTime: new Date("2022-03-28T06:37:04.000Z"),
+          },
+          name: "item-0",
+          originalSize: 24,
+          type: "file",
+        },
+      },
+      {
+        contents: "Contents of item-1 here!",
+        entry: {
+          body: undefined,
+          compressedSize: 24,
+          crc: 2064115288,
+          extendedTimestamps: undefined,
+          name: "item-1",
+          originalSize: 24,
+          type: "file",
+        },
+      },
+      {
+        contents: "Contents of item-2 here!",
+        entry: {
+          body: undefined,
+          compressedSize: 24,
+          crc: 1257241797,
+          extendedTimestamps: undefined,
+          name: "item-2",
+          originalSize: 24,
+          type: "file",
+        },
+      },
+      {
+        contents: "Contents of item-3 here!",
+        entry: {
+          body: undefined,
+          compressedSize: 24,
+          crc: 3969447793,
+          extendedTimestamps: undefined,
+          name: "item-3",
+          originalSize: 24,
+          type: "file",
+        },
+      },
+      {
+        contents: "Contents of item-4 here!",
+        entry: {
+          body: undefined,
+          compressedSize: 24,
+          crc: 692046335,
+          extendedTimestamps: undefined,
+          name: "item-4",
+          originalSize: 24,
+          type: "file",
+        },
+      },
+    ],
+  );
+});
 
 const testZipUrl = new URL("./test.zip", import.meta.url);
 
 Deno.test("can read test.zip", {
   permissions: { read: [testZipUrl] },
 }, async () => {
-  const textDecoder = new TextDecoder();
-
   const req = await fetch(testZipUrl.href);
   assert(req.ok);
 
@@ -75,7 +195,9 @@ Deno.test("can read test.zip", {
           },
           name: "dril_gpt2_1327347532645756929.txt",
           type: "file",
-          size: 287,
+          originalSize: 287,
+          compressedSize: 198,
+          crc: 180766896,
         },
       },
       {
@@ -89,7 +211,9 @@ Deno.test("can read test.zip", {
           },
           name: "dril_1299440247927836672.txt",
           type: "file",
-          size: 152,
+          originalSize: 152,
+          compressedSize: 123,
+          crc: 1275466175,
         },
       },
       {
@@ -112,7 +236,9 @@ Deno.test("can read test.zip", {
           },
           name: "subdir/draft2.png",
           type: "file",
-          size: 390043,
+          originalSize: 390043,
+          compressedSize: 361303,
+          crc: 2864909653,
         },
       },
     ],

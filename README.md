@@ -15,6 +15,6 @@ it's not right to use for writing zip files to disk unless the files are
 uncompressed or pre-compressed. Zip files are not generally conducive to being
 creating as a stream because the size of each (optionally compressed) item must
 be known before the item may be written into the zip file. (The zip file format
-does have an option for allowing zip files to be encoded as a stream, but zip
-files using that option are not decodeable as a stream, so this library does not
-support that.)
+does have an option to put sizes after file data to better allow zip files to be
+encoded as a stream, but zip files using that option are not decodeable as a
+stream, so this library does not support that.)

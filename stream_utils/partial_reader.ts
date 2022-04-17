@@ -7,7 +7,8 @@ export interface StreamUpToAmountResult {
 }
 
 export abstract class PartialReader {
-  // TODO should PartialReader accept an AbortSignal?
+  // TODO should PartialReader accept an AbortSignal? Or should it have an
+  // abort method like a ReadableStreamDefaultReader?
   // TODO throw if overlapping reads happen.
   static fromStream(stream: ReadableStream<Uint8Array>): PartialReader {
     try {

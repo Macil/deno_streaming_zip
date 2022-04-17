@@ -1,13 +1,15 @@
 import { decompressDeflateRaw } from "./_deflate_raw.ts";
 import { ExactBytesTransformStream } from "./stream_utils/exact_bytes_transform_stream.ts";
 import { PartialReader } from "./stream_utils/partial_reader.ts";
-import { ExtendedTimestamps, parseExtraField } from "./_extra_field.ts";
+import { ExtendedTimestamps, parseExtraField } from "./_read_extra_field.ts";
 
 export type ReadEntry = {
   type: "file";
   name: string;
   extendedTimestamps?: ExtendedTimestamps;
-  size: number;
+  originalSize: number;
+  compressedSize: number;
+  crc: number;
   body: OptionalStream;
 } | {
   type: "directory";
@@ -15,16 +17,21 @@ export type ReadEntry = {
   extendedTimestamps?: ExtendedTimestamps;
 };
 
+// TODO method to get raw compressed data
 export interface OptionalStream {
   stream(): ReadableStream<Uint8Array>;
   autodrain(): void;
+}
+
+export interface ReadOptions {
+  signal?: AbortSignal;
 }
 
 /** Each Entry's body must be consumed or canceled in order for read to
  * continue. TODO should we offer a way to get raw compressed data? */
 export async function* read(
   stream: ReadableStream<Uint8Array>,
-  options: { signal?: AbortSignal } = {},
+  options: ReadOptions = {},
 ): AsyncIterable<ReadEntry> {
   // TODO use abort signal
   const textDecoder = new TextDecoder();
@@ -145,7 +152,9 @@ export async function* read(
           type,
           name: fileName,
           extendedTimestamps: parsedExtraFields.extendedTimestamps,
-          size: uncompressedSize,
+          originalSize: uncompressedSize,
+          compressedSize,
+          crc,
           body,
         };
       } else {
