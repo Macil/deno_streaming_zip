@@ -1,4 +1,4 @@
-# streaming-zip
+# streaming_zip
 
 This is a Deno library for doing streaming encoding and decoding of zip files. Streaming encoding and decoding is useful when you don't have random access to read or write a zip file. This can be the case if you want to decode a zip file while it's still being downloaded, or if you want to send a zip file as soon as possible while it's still being made with minimal buffering and latency.
 
