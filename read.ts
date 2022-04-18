@@ -41,6 +41,12 @@ export async function* read(
   const textDecoder = new TextDecoder();
 
   const partialReader = PartialReader.fromStream(stream);
+
+  const cancelPartialReader = (err: unknown) => {
+    partialReader.cancel(err);
+  };
+  signal?.addEventListener("abort", cancelPartialReader, { once: true });
+
   try {
     while (true) {
       signal?.throwIfAborted();
@@ -130,6 +136,7 @@ export async function* read(
 
           let stream = bodyStream.stream.pipeThrough(
             new ExactBytesTransformStream(compressedSize),
+            { signal },
           );
           switch (compressionMethod) {
             case 0:
@@ -190,5 +197,7 @@ export async function* read(
   } catch (err) {
     await partialReader.cancel(err);
     throw err;
+  } finally {
+    signal?.removeEventListener("abort", cancelPartialReader);
   }
 }
