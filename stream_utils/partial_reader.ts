@@ -6,10 +6,14 @@ export interface StreamUpToAmountResult {
   onConsumed: Promise<void>;
 }
 
+// TODO throw if overlapping reads happen.
 export abstract class PartialReader {
-  // TODO should PartialReader accept an AbortSignal? Or should it have an
-  // abort method like a ReadableStreamDefaultReader?
-  // TODO throw if overlapping reads happen.
+  /**
+   * Construct a PartialReader from a ReadableStream.
+   * Internally this will return a subclass of PartialReader based on whether the `stream`
+   * supports byob mode ("bring your own buffer") readers, which are more efficient for some
+   * use-cases.
+   */
   static fromStream(stream: ReadableStream<Uint8Array>): PartialReader {
     try {
       return new BYOBPartialReader(stream.getReader({ mode: "byob" }));
@@ -22,19 +26,26 @@ export abstract class PartialReader {
     }
   }
 
+  /**
+   * Cancel the ReadableStream reader. This will cause any in-progress or future reads to fail.
+   */
   abstract cancel(reason?: unknown): Promise<void>;
 
-  /** Equivalent to ReadableStreamDefaultReader.read() except that a maximum size is provided,
-   * and if the underlying read() result is greater than the maximum size, the extra data
+  /**
+   * Equivalent to {@link ReadableStreamDefaultReader.read} except that a maximum size is provided,
+   * and if the underlying read() result is greater than the maximum size, then the extra data
    * will be buffered for later.
+   * @returns A {@link ReadableStreamReadResult} of `maxSize` bytes or less.
    */
   abstract limitedRead(
     maxSize: number,
   ): Promise<ReadableStreamReadResult<Uint8Array>>;
 
-  /** Repeatedly calls read() on the underlying reader until it ends or it fills up a
-   * buffer of a given size. */
-  async readUpToAmount(size: number): Promise<Uint8Array> {
+  /**
+   * Reads and returns `size` bytes from the stream, or less if the stream ends early.
+   * @returns A Uint8Array of `size` bytes or less.
+   */
+  async readAmount(size: number): Promise<Uint8Array> {
     const firstPart = await this.limitedRead(size);
     if (firstPart.done) {
       return new Uint8Array(0);
@@ -57,10 +68,13 @@ export abstract class PartialReader {
     }
   }
 
-  /** Repeatedly calls read() on the underlying reader until it fills up a buffer of a
-   * given size. Throws an error if the reader ends before filling the buffer. */
-  async exactRead(size: number): Promise<Uint8Array> {
-    const data = await this.readUpToAmount(size);
+  /**
+   * Reads and returns exactly `size` bytes from the stream.
+   * Throws an error if the reader ends before filling the buffer.
+   * @returns A Uint8Array of exactly `size` bytes.
+   */
+  async readAmountStrict(size: number): Promise<Uint8Array> {
+    const data = await this.readAmount(size);
     if (data.byteLength < size) {
       throw new Error("Stream completed early during exactRead() call");
     }
@@ -68,7 +82,7 @@ export abstract class PartialReader {
   }
 
   /** Skips `size` bytes of the stream by reading them and ignoring the result. */
-  async skipUpToAmount(size: number): Promise<void> {
+  async skipAmount(size: number): Promise<void> {
     let bytesLeft = size;
     while (bytesLeft > 0) {
       const part = await this.limitedRead(bytesLeft);
@@ -79,11 +93,13 @@ export abstract class PartialReader {
     }
   }
 
-  /** Returns a ReadableStream that the underlying reader is redirected to for the
+  /**
+   * Returns a ReadableStream that the underlying reader is redirected to for the
    * next `size` bytes.
    * If you want to assert that the returned stream outputs `size` bytes without ending early,
-   * then use `.pipeThrough(new ExactBytesTransformStream(size))` on the result. */
-  streamUpToAmount(size: number): StreamUpToAmountResult {
+   * then use `.pipeThrough(new ExactBytesTransformStream(size))` on the result.
+   */
+  streamAmount(size: number): StreamUpToAmountResult {
     const deferred = new DeferredPromise<void>();
     const result: StreamUpToAmountResult = {
       stream: null as unknown as ReadableStream<Uint8Array>,
@@ -115,7 +131,7 @@ export abstract class PartialReader {
       },
       cancel: async (_reason) => {
         try {
-          await this.skipUpToAmount(bytesLeft);
+          await this.skipAmount(bytesLeft);
         } catch (err) {
           deferred.reject(err);
           throw err;
@@ -132,6 +148,11 @@ export class DefaultPartialReader extends PartialReader {
   readonly #reader: ReadableStreamDefaultReader<Uint8Array>;
   #leftOvers: Uint8Array | undefined;
 
+  /**
+   * Manually constructs a DefaultPartialReader from a default mode reader.
+   * Generally {@link PartialReader.fromStream} should be used instead of this which
+   * will specially handle streams that support more powerful byob mode readers.
+   */
   constructor(
     reader: ReadableStreamDefaultReader<Uint8Array>,
   ) {
@@ -170,6 +191,12 @@ export class DefaultPartialReader extends PartialReader {
 
 export class BYOBPartialReader extends PartialReader {
   readonly #reader: ReadableStreamBYOBReader;
+
+  /**
+   * Manually constructs a BYOBPartialReader from a byob mode reader.
+   * Generally {@link PartialReader.fromStream} should be used instead of this which
+   * will automatically handle streams that don't support byob mode readers.
+   */
   constructor(
     reader: ReadableStreamBYOBReader,
   ) {
@@ -181,7 +208,7 @@ export class BYOBPartialReader extends PartialReader {
     return this.#reader.cancel(reason);
   }
 
-  async readUpToAmount(size: number): Promise<Uint8Array> {
+  async readAmount(size: number): Promise<Uint8Array> {
     let bytesRead = 0;
     let view = new Uint8Array(size);
     while (bytesRead < size) {
@@ -199,7 +226,7 @@ export class BYOBPartialReader extends PartialReader {
     return this.#reader.read(new Uint8Array(maxSize));
   }
 
-  async skipUpToAmount(size: number): Promise<void> {
+  async skipAmount(size: number): Promise<void> {
     let bytesLeft = size;
     let trashBuffer = new Uint8Array(Math.min(bytesLeft, 2048));
     while (bytesLeft > 0) {
@@ -215,7 +242,7 @@ export class BYOBPartialReader extends PartialReader {
     }
   }
 
-  streamUpToAmount(size: number): StreamUpToAmountResult {
+  streamAmount(size: number): StreamUpToAmountResult {
     const deferred = new DeferredPromise<void>();
     const result: StreamUpToAmountResult = {
       stream: null as unknown as ReadableStream<Uint8Array>,
@@ -262,7 +289,7 @@ export class BYOBPartialReader extends PartialReader {
       },
       cancel: async (_reason) => {
         try {
-          await this.skipUpToAmount(bytesLeft);
+          await this.skipAmount(bytesLeft);
         } catch (err) {
           deferred.reject(err);
           throw err;

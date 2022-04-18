@@ -20,13 +20,13 @@ for (const [name, factory] of Object.entries(tests)) {
   Deno.test(name, { permissions: {} }, async () => {
     const originalStream = testByteStream();
     const ps = factory(originalStream);
-    assertEquals(await ps.exactRead(2), new Uint8Array([1, 2]));
-    assertEquals(await ps.readUpToAmount(5), new Uint8Array([3, 4, 5, 6, 7]));
-    assertEquals(await ps.exactRead(2), new Uint8Array([8, 9]));
-    assertEquals(await ps.exactRead(1), new Uint8Array([10]));
+    assertEquals(await ps.readAmountStrict(2), new Uint8Array([1, 2]));
+    assertEquals(await ps.readAmount(5), new Uint8Array([3, 4, 5, 6, 7]));
+    assertEquals(await ps.readAmountStrict(2), new Uint8Array([8, 9]));
+    assertEquals(await ps.readAmountStrict(1), new Uint8Array([10]));
 
     {
-      const streamResult = ps.streamUpToAmount(7);
+      const streamResult = ps.streamAmount(7);
       const pssIt = streamResult.stream[Symbol.asyncIterator]();
       assertEquals(await pssIt.next(), {
         done: false,
@@ -49,7 +49,7 @@ for (const [name, factory] of Object.entries(tests)) {
     }
 
     {
-      const streamResult = ps.streamUpToAmount(7);
+      const streamResult = ps.streamAmount(7);
       const pssIt = streamResult.stream[Symbol.asyncIterator]();
       assertEquals(streamResult.consumed, false);
       assertEquals(await pssIt.next(), {
@@ -65,13 +65,13 @@ for (const [name, factory] of Object.entries(tests)) {
   });
 
   Deno.test(
-    `${name} - streamUpToAmount cancel`,
+    `${name} - streamAmount cancel`,
     { permissions: {} },
     async () => {
       const originalStream = testByteStream();
       const ps = factory(originalStream);
 
-      const streamResult = ps.streamUpToAmount(7);
+      const streamResult = ps.streamAmount(7);
 
       let streamConsumed = false;
       streamResult.onConsumed.then(() => {
@@ -92,13 +92,13 @@ for (const [name, factory] of Object.entries(tests)) {
   );
 
   Deno.test(
-    `${name} - streamUpToAmount reader cancel`,
+    `${name} - streamAmount reader cancel`,
     { permissions: {} },
     async () => {
       const originalStream = testByteStream();
       const ps = factory(originalStream);
 
-      const streamResult = ps.streamUpToAmount(7);
+      const streamResult = ps.streamAmount(7);
 
       let streamConsumed = false;
       streamResult.onConsumed.then(() => {
@@ -124,12 +124,12 @@ for (const [name, factory] of Object.entries(tests)) {
     },
   );
 
-  Deno.test(`${name} - readUpToAmount`, { permissions: {} }, async () => {
+  Deno.test(`${name} - readAmount`, { permissions: {} }, async () => {
     const originalStream = testByteStream();
     const ps = factory(originalStream);
-    const read = await ps.readUpToAmount(30);
+    const read = await ps.readAmount(30);
     assertEquals(read.length, 18);
-    const read2 = await ps.readUpToAmount(30);
+    const read2 = await ps.readAmount(30);
     assertEquals(read2.length, 0);
   });
 }

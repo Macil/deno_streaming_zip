@@ -50,7 +50,7 @@ export async function* read(
   try {
     while (true) {
       signal?.throwIfAborted();
-      const header = await partialReader.readUpToAmount(30);
+      const header = await partialReader.readAmount(30);
       if (header.length === 0) {
         break;
       }
@@ -107,7 +107,7 @@ export async function* read(
       const fileNameLength = headerDv.getUint16(26, true);
       const extraFieldLength = headerDv.getUint16(28, true);
       const fileName = textDecoder.decode(
-        await partialReader.exactRead(fileNameLength),
+        await partialReader.readAmountStrict(fileNameLength),
       );
 
       let type: ReadEntry["type"] | undefined;
@@ -117,7 +117,9 @@ export async function* read(
         type = "file";
       }
 
-      const extraFieldRaw = await partialReader.exactRead(extraFieldLength);
+      const extraFieldRaw = await partialReader.readAmountStrict(
+        extraFieldLength,
+      );
       const parsedExtraFields = parseExtraField(extraFieldRaw);
 
       if (parsedExtraFields.zip64) {
@@ -131,7 +133,7 @@ export async function* read(
           if (bodyMethodFinished) {
             throw new Error("body already used");
           }
-          const bodyStream = partialReader.streamUpToAmount(compressedSize);
+          const bodyStream = partialReader.streamAmount(compressedSize);
           bodyMethodFinished = bodyStream.onConsumed;
 
           let stream = bodyStream.stream.pipeThrough(
@@ -157,7 +159,7 @@ export async function* read(
           if (bodyMethodFinished) {
             throw new Error("body already used");
           }
-          bodyMethodFinished = partialReader.skipUpToAmount(compressedSize);
+          bodyMethodFinished = partialReader.skipAmount(compressedSize);
         },
       };
 
