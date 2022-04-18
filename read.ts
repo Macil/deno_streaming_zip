@@ -202,4 +202,7 @@ export async function* read(
   } finally {
     signal?.removeEventListener("abort", cancelPartialReader);
   }
+  // Don't let this function end successfully if we might've read truncated data because
+  // of an abort.
+  signal?.throwIfAborted();
 }

@@ -132,6 +132,15 @@ for (const [name, factory] of Object.entries(tests)) {
     const read2 = await ps.readAmount(30);
     assertEquals(read2.length, 0);
   });
+
+  Deno.test(`${name} - cancel during read`, { permissions: {} }, async () => {
+    const originalStream = testByteStream();
+    const ps = factory(originalStream);
+    const readPromise = ps.readAmount(30);
+    await ps.cancel(new Error("Abort"));
+    const read = await readPromise;
+    assertEquals(read.length, 0);
+  });
 }
 
 /** Creates a ReadableStream that offers 3 byte chunks from [1,2,3],[4,5,6],...[16,17,18]. */
