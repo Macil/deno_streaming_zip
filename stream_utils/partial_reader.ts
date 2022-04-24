@@ -27,7 +27,8 @@ export abstract class PartialReader {
   }
 
   /**
-   * Cancel the ReadableStream reader. This will cause any in-progress or future reads to fail.
+   * Cancel the ReadableStream reader. This will cause any in-progress or future reads to think that
+   * the end of the stream has been reached.
    */
   abstract cancel(reason?: unknown): Promise<void>;
 
