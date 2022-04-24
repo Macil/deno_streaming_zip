@@ -1,6 +1,6 @@
 import { decompressDeflateRaw } from "./_deflate_raw.ts";
-import { ExactBytesTransformStream } from "./stream_utils/exact_bytes_transform_stream.ts";
-import { PartialReader } from "./stream_utils/partial_reader.ts";
+import { ExactBytesTransformStream } from "https://deno.land/x/stream_slicing@v0.1.0/exact_bytes_transform_stream.ts";
+import { PartialReader } from "https://deno.land/x/stream_slicing@v0.1.0/partial_reader.ts";
 import { ExtendedTimestamps, parseExtraField } from "./_read_extra_field.ts";
 
 export type ReadEntry = {
