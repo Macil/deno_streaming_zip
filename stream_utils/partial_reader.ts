@@ -212,6 +212,8 @@ export class BYOBPartialReader extends PartialReader {
     let bytesRead = 0;
     let view = new Uint8Array(size);
     while (bytesRead < size) {
+      // TODO use `atLeast` option if/when it gets implemented.
+      // https://github.com/whatwg/streams/pull/1145
       const result = await this.#reader.read(view);
       if (result.done) {
         return new Uint8Array(view.buffer, 0, bytesRead);
