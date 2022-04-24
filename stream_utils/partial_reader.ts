@@ -160,11 +160,11 @@ export class DefaultPartialReader extends PartialReader {
     this.#reader = reader;
   }
 
-  cancel(reason?: unknown): Promise<void> {
+  override cancel(reason?: unknown): Promise<void> {
     return this.#reader.cancel(reason);
   }
 
-  async limitedRead(
+  override async limitedRead(
     maxSize: number,
   ): Promise<ReadableStreamReadResult<Uint8Array>> {
     let value: Uint8Array;
@@ -204,11 +204,11 @@ export class BYOBPartialReader extends PartialReader {
     this.#reader = reader;
   }
 
-  cancel(reason?: unknown): Promise<void> {
+  override cancel(reason?: unknown): Promise<void> {
     return this.#reader.cancel(reason);
   }
 
-  async readAmount(size: number): Promise<Uint8Array> {
+  override async readAmount(size: number): Promise<Uint8Array> {
     let bytesRead = 0;
     let view = new Uint8Array(size);
     while (bytesRead < size) {
@@ -224,11 +224,13 @@ export class BYOBPartialReader extends PartialReader {
     return new Uint8Array(view.buffer);
   }
 
-  limitedRead(maxSize: number): Promise<ReadableStreamReadResult<Uint8Array>> {
+  override limitedRead(
+    maxSize: number,
+  ): Promise<ReadableStreamReadResult<Uint8Array>> {
     return this.#reader.read(new Uint8Array(maxSize));
   }
 
-  async skipAmount(size: number): Promise<void> {
+  override async skipAmount(size: number): Promise<void> {
     let bytesLeft = size;
     let trashBuffer = new Uint8Array(Math.min(bytesLeft, 2048));
     while (bytesLeft > 0) {
@@ -244,7 +246,7 @@ export class BYOBPartialReader extends PartialReader {
     }
   }
 
-  streamAmount(size: number): StreamUpToAmountResult {
+  override streamAmount(size: number): StreamUpToAmountResult {
     const deferred = new DeferredPromise<void>();
     const result: StreamUpToAmountResult = {
       stream: null as unknown as ReadableStream<Uint8Array>,
