@@ -1,9 +1,9 @@
 import {
   assert,
   assertEquals,
-} from "https://deno.land/std@0.135.0/testing/asserts.ts";
-import { readableStreamFromIterable } from "https://deno.land/std@0.135.0/streams/conversion.ts";
-import { Buffer } from "https://deno.land/std@0.135.0/streams/buffer.ts";
+} from "https://deno.land/std@0.136.0/testing/asserts.ts";
+import { readableStreamFromIterable } from "https://deno.land/std@0.136.0/streams/conversion.ts";
+import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
 import { read, ReadEntry, write, WriteEntry } from "./mod.ts";
 import { Crc32Stream } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
 

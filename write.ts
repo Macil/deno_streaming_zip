@@ -1,5 +1,5 @@
-import { ExactBytesTransformStream } from "https://deno.land/x/stream_slicing@v1.0.0/exact_bytes_transform_stream.ts";
-import { ExtendedTimestamps } from "./_read_extra_field.ts";
+import { ExactBytesTransformStream } from "https://deno.land/x/stream_slicing@v1.0.1/exact_bytes_transform_stream.ts";
+import type { ExtendedTimestamps } from "./_read_extra_field.ts";
 
 export type WriteBody = {
   compressed?: null;

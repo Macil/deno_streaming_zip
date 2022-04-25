@@ -36,7 +36,7 @@ this library does not support that.)
 
 ```ts
 import { read } from "https://deno.land/x/streaming_zip@v1.0.0/read.ts";
-import { Buffer } from "https://deno.land/std@0.135.0/streams/buffer.ts";
+import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
 
 const req = await fetch("https://example.com/somefile.zip");
 for await (const entry of read(req.body!)) {
@@ -78,9 +78,9 @@ for await (const entry of read(req.body!)) {
 
 ```ts
 import { write } from "https://deno.land/x/streaming_zip@v1.0.0/write.ts";
-import { readableStreamFromIterable } from "https://deno.land/std@0.135.0/streams/conversion.ts";
+import { readableStreamFromIterable } from "https://deno.land/std@0.136.0/streams/conversion.ts";
 import { crc32 } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
-import { Buffer } from "https://deno.land/std@0.135.0/streams/buffer.ts";
+import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
 
 async function* entryGenerator(): AsyncGenerator<WriteEntry> {
   yield {
