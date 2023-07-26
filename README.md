@@ -11,8 +11,14 @@ timestamps extensions.
 
 ## Limitations
 
-This library does not currently support reading or writing zip files with
-encryption.
+The cases where this library is useful are expected to be limited. This library
+is mostly released for educational purposes.
+
+This library reads zip files in a streaming fashion by iterating over local file
+headers instead of using the central directory, which means it's less efficient
+for reading zip files that you have random access to such as local files, and it
+does not handle zip files that have been appended to or created with the data
+descriptor option.
 
 This library's ability to create zip files is limited. This library is not right
 for writing zip files to disk unless the files are uncompressed or
@@ -23,9 +29,12 @@ would be realistic is where you're transforming a pre-existing zip file.
 Zip files are not generally conducive to being creating as a stream because the
 size of each (optionally compressed) item and its CRC checksum must be known
 before the item may be written into the zip file. (The zip file format does have
-an option to put sizes after file data to better allow zip files to be encoded
-as a stream, but zip files using that option are not decodeable as a stream, so
-this library does not support that.)
+the data descriptor option to put sizes after file data to better allow zip
+files to be encoded as a stream, but zip files using that option are not
+decodeable as a stream, so this library does not support that.)
+
+This library does not currently support reading or writing zip files with
+encryption.
 
 ## Usage
 
