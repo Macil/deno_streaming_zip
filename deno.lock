@@ -1,0 +1,21 @@
+{
+  "version": "2",
+  "remote": {
+    "https://deno.land/std@0.136.0/_util/assert.ts": "e94f2eb37cebd7f199952e242c77654e43333c1ac4c5c700e929ea3aa5489f74",
+    "https://deno.land/std@0.136.0/bytes/bytes_list.ts": "67eb118e0b7891d2f389dad4add35856f4ad5faab46318ff99653456c23b025d",
+    "https://deno.land/std@0.136.0/bytes/equals.ts": "a60ef9f01fb6e06a4e0343fc44d53d39d12dd66bc3f09ac8e6eb9cc1a6335e48",
+    "https://deno.land/std@0.136.0/bytes/mod.ts": "4cef6fe8f0de217b9babbcbb0a566402b667f18a8e6d094a45e5fb3fc1afff70",
+    "https://deno.land/std@0.136.0/fmt/colors.ts": "30455035d6d728394781c10755351742dd731e3db6771b1843f9b9e490104d37",
+    "https://deno.land/std@0.136.0/io/buffer.ts": "bd0c4bf53db4b4be916ca5963e454bddfd3fcd45039041ea161dbf826817822b",
+    "https://deno.land/std@0.136.0/streams/buffer.ts": "ee47194022d47fa23d4749b8afbadc83c237c4595467a9bddb322af0dd205815",
+    "https://deno.land/std@0.136.0/streams/conversion.ts": "712585bfa0172a97fb68dd46e784ae8ad59d11b88079d6a4ab098ff42e697d21",
+    "https://deno.land/std@0.136.0/testing/_diff.ts": "d8743b5c15d34eb58ae7e4ad43295ee1c7a935029b460a056d901f3aefcead45",
+    "https://deno.land/std@0.136.0/testing/_format.ts": "0d8dc79eab15b67cdc532826213bbe05bccfd276ca473a50a3fc7bbfb7260642",
+    "https://deno.land/std@0.136.0/testing/asserts.ts": "61d85fc80f548a6e1e66d93fb7874a2c9e097aeecc00643c5f4f340370cde56f",
+    "https://deno.land/x/crc32@v0.2.2/mod.ts": "253e0943464b6ffca5194fb9b3b87fdbd0ee3c2b071fb6021cdec654bc33e486",
+    "https://deno.land/x/deferred_promise@v1.0.0/mod.ts": "99088ce7d6c13e32a9914384b56d7639809ca1c37937999dfcb3ddc56253160b",
+    "https://deno.land/x/stream_slicing@v1.0.1/_support.deno.ts": "3fe5b64e98ca1dee94d0b240b9777be96f716dc7623e6360e05d11d5265ae901",
+    "https://deno.land/x/stream_slicing@v1.0.1/exact_bytes_transform_stream.ts": "bf915933dbd0a57d45c2508b68e723b717c5d02df83fb6f9c38720da9f17c82a",
+    "https://deno.land/x/stream_slicing@v1.0.1/partial_reader.ts": "869c3ef85fd43c60ec8ff77826702e2ae26282c83006f251f3c2348be9fb3de8"
+  }
+}
