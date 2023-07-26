@@ -3,8 +3,10 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.195.0/assert/mod.ts";
 import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
-import { read, ReadEntry, write, WriteEntry } from "./mod.ts";
 import { Crc32Stream } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
+import { partialReaderFromDenoFsFile } from "https://deno.land/x/stream_slicing@v1.1.0/deno_helpers.ts";
+import type { PartialReader } from "https://deno.land/x/stream_slicing@v1.1.0/partial_reader.ts";
+import { read, ReadEntry, write, WriteEntry } from "./mod.ts";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -153,14 +155,27 @@ Deno.test("write -> read", { permissions: {} }, async () => {
 
 const testZipUrl = new URL("./test.zip", import.meta.url);
 
-Deno.test("can read test.zip", {
+Deno.test("can read test.zip using fetch", {
   permissions: { read: [testZipUrl] },
 }, async () => {
-  const req = await fetch(testZipUrl.href);
+  const req = await fetch(testZipUrl);
   assert(req.ok);
+  await readTestZip(req.body!);
+});
 
+Deno.test("can read test.zip using Deno.FsFile", {
+  permissions: { read: [testZipUrl] },
+}, async () => {
+  const partialReader = partialReaderFromDenoFsFile(
+    await Deno.open(testZipUrl),
+  );
+  await readTestZip(partialReader);
+});
+
+async function readTestZip(stream: ReadableStream<Uint8Array> | PartialReader) {
   const readEntries: { entry: ReadEntry; contents?: string }[] = [];
-  for await (const entry of read(req.body!)) {
+
+  for await (const entry of read(stream)) {
     if (entry.type === "file") {
       if (entry.name.endsWith(".txt")) {
         const buffer = new Buffer();
@@ -242,4 +257,4 @@ Deno.test("can read test.zip", {
       },
     ],
   );
-});
+}
