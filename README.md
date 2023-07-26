@@ -32,7 +32,7 @@ this library does not support that.)
 ### read()
 
 ```ts
-import { read } from "https://deno.land/x/streaming_zip@v1.0.1/read.ts";
+import { read } from "https://deno.land/x/streaming_zip/read.ts";
 import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
 import { partialReaderFromDenoFsFile } from "https://deno.land/x/stream_slicing@v1.1.0/deno_helpers.ts";
 
@@ -85,7 +85,7 @@ for await (const entry of read(stream)) {
 ### write()
 
 ```ts
-import { write } from "https://deno.land/x/streaming_zip@v1.0.1/write.ts";
+import { write } from "https://deno.land/x/streaming_zip/write.ts";
 import { crc32 } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
 import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
 
