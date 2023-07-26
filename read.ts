@@ -40,9 +40,9 @@ export async function* read(
   const { signal } = options;
   const textDecoder = new TextDecoder();
 
-  const partialReader = stream instanceof PartialReader
-    ? stream
-    : PartialReader.fromStream(stream);
+  const partialReader = stream instanceof ReadableStream
+    ? PartialReader.fromStream(stream)
+    : stream;
 
   const cancelPartialReader = (err: unknown) => {
     partialReader.cancel(err);
