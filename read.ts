@@ -1,6 +1,6 @@
 import { decompressDeflateRaw } from "./_deflate_raw.ts";
-import { ExactBytesTransformStream } from "https://deno.land/x/stream_slicing@v1.0.1/exact_bytes_transform_stream.ts";
-import { PartialReader } from "https://deno.land/x/stream_slicing@v1.0.1/partial_reader.ts";
+import { ExactBytesTransformStream } from "https://deno.land/x/stream_slicing@v1.1.0/exact_bytes_transform_stream.ts";
+import { PartialReader } from "https://deno.land/x/stream_slicing@v1.1.0/partial_reader.ts";
 import { ExtendedTimestamps, parseExtraField } from "./_read_extra_field.ts";
 
 export type ReadEntry = {
@@ -34,13 +34,15 @@ export interface ReadOptions {
 /** Each Entry's body must be consumed or canceled in order for read to
  * continue. */
 export async function* read(
-  stream: ReadableStream<Uint8Array>,
+  stream: ReadableStream<Uint8Array> | PartialReader,
   options: ReadOptions = {},
 ): AsyncIterable<ReadEntry> {
   const { signal } = options;
   const textDecoder = new TextDecoder();
 
-  const partialReader = PartialReader.fromStream(stream);
+  const partialReader = stream instanceof PartialReader
+    ? stream
+    : PartialReader.fromStream(stream);
 
   const cancelPartialReader = (err: unknown) => {
     partialReader.cancel(err);
