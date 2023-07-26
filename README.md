@@ -36,8 +36,9 @@ this library does not support that.)
 
 ```ts
 import { read } from "https://deno.land/x/streaming_zip@v1.0.1/read.ts";
-import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
+import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
 
+const textDecoder = new TextDecoder();
 const req = await fetch("https://example.com/somefile.zip");
 for await (const entry of read(req.body!)) {
   // Each entry object is of ReadEntry type:
@@ -61,7 +62,7 @@ for await (const entry of read(req.body!)) {
     if (entry.name.endsWith(".txt")) {
       const buffer = new Buffer();
       await entry.body.stream().pipeTo(buffer.writable);
-      const contents = textDecoder.decode(buffer.bytes());
+      const contents = textDecoder.decode(buffer.bytes({ copy: false }));
       console.log(`contents of ${entry.name}: ${contents}`);
     } else {
       console.log(`ignoring non-txt file ${entry.name}`);
@@ -78,9 +79,8 @@ for await (const entry of read(req.body!)) {
 
 ```ts
 import { write } from "https://deno.land/x/streaming_zip@v1.0.1/write.ts";
-import { readableStreamFromIterable } from "https://deno.land/std@0.136.0/streams/conversion.ts";
 import { crc32 } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
-import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
+import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
 
 async function* entryGenerator(): AsyncGenerator<WriteEntry> {
   yield {
@@ -98,7 +98,7 @@ async function* entryGenerator(): AsyncGenerator<WriteEntry> {
       modifyTime: new Date("2022-03-29T05:37:04.000Z"),
     },
     body: {
-      stream: readableStreamFromIterable([fileBuf]),
+      stream: ReadableStream.from([fileBuf]),
       originalSize: fileBuf.byteLength,
       originalCrc: parseInt(crc32(fileBuf), 16),
     },
@@ -108,7 +108,7 @@ async function* entryGenerator(): AsyncGenerator<WriteEntry> {
 const stream = write(entryGenerator());
 const buffer = new Buffer();
 await stream.pipeTo(buffer.writable);
-console.log(buffer.bytes());
+console.log(buffer.bytes({ copy: false }));
 ```
 
 ## Documentation

@@ -1,9 +1,8 @@
 import {
   assert,
   assertEquals,
-} from "https://deno.land/std@0.136.0/testing/asserts.ts";
-import { readableStreamFromIterable } from "https://deno.land/std@0.136.0/streams/conversion.ts";
-import { Buffer } from "https://deno.land/std@0.136.0/streams/buffer.ts";
+} from "https://deno.land/std@0.195.0/assert/mod.ts";
+import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
 import { read, ReadEntry, write, WriteEntry } from "./mod.ts";
 import { Crc32Stream } from "https://deno.land/x/crc32@v0.2.2/mod.ts";
 
@@ -32,7 +31,7 @@ Deno.test("write -> read", { permissions: {} }, async () => {
       const text = `Contents of item-${i} here!`;
       const buf = textEncoder.encode(text);
       const stream = () => {
-        return readableStreamFromIterable([
+        return ReadableStream.from([
           buf.slice(0, 4),
           buf.slice(4, 11),
           buf.slice(11),
@@ -62,7 +61,7 @@ Deno.test("write -> read", { permissions: {} }, async () => {
     if (entry.type === "file") {
       const buffer = new Buffer();
       await entry.body.stream().pipeTo(buffer.writable);
-      const contents = textDecoder.decode(buffer.bytes());
+      const contents = textDecoder.decode(buffer.bytes({ copy: false }));
       readEntries.push({ entry, contents });
     } else {
       readEntries.push({ entry });
@@ -166,7 +165,7 @@ Deno.test("can read test.zip", {
       if (entry.name.endsWith(".txt")) {
         const buffer = new Buffer();
         await entry.body.stream().pipeTo(buffer.writable);
-        const contents = textDecoder.decode(buffer.bytes());
+        const contents = textDecoder.decode(buffer.bytes({ copy: false }));
         readEntries.push({ entry, contents });
       } else {
         entry.body.autodrain();
