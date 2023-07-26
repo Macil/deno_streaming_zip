@@ -11,17 +11,14 @@ timestamps extensions.
 
 ## Limitations
 
-The cases where this library is useful are expected to be limited. This library
-is mostly released for educational purposes.
+This library does not currently support reading or writing zip files with
+encryption.
 
-This library is not right to use for reading zip files from disk (where random
-access is available) unless you intend to read all files from it in order.
-
-This library is not right for writing zip files to disk unless the files are
-uncompressed or pre-compressed, you know all of their compressed and
-uncompressed sizes, and you know their CRC checksums ahead of time. It's
-expected that the main case this would be realistic is where you're transforming
-a pre-existing zip file.
+This library's ability to create zip files is limited. This library is not right
+for writing zip files to disk unless the files are uncompressed or
+pre-compressed, you know all of their compressed and uncompressed sizes, and you
+know their CRC checksums ahead of time. It's expected that the main case this
+would be realistic is where you're transforming a pre-existing zip file.
 
 Zip files are not generally conducive to being creating as a stream because the
 size of each (optionally compressed) item and its CRC checksum must be known
@@ -37,10 +34,20 @@ this library does not support that.)
 ```ts
 import { read } from "https://deno.land/x/streaming_zip@v1.0.1/read.ts";
 import { Buffer } from "https://deno.land/std@0.195.0/streams/buffer.ts";
+import { partialReaderFromDenoFsFile } from "https://deno.land/x/stream_slicing@v1.1.0/deno_helpers.ts";
 
 const textDecoder = new TextDecoder();
-const req = await fetch("https://example.com/somefile.zip");
-for await (const entry of read(req.body!)) {
+
+// Reading a zip from a fetch response body:
+// const req = await fetch("https://example.com/somefile.zip");
+// const stream = req.body!;
+
+// Reading a zip from a local file:
+const stream = partialReaderFromDenoFsFile(
+  await Deno.open("somefile.zip"),
+);
+
+for await (const entry of read(stream)) {
   // Each entry object is of ReadEntry type:
   /*
   export type ReadEntry = {
