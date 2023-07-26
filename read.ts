@@ -108,8 +108,12 @@ export async function* read(
 
       const fileNameLength = headerDv.getUint16(26, true);
       const extraFieldLength = headerDv.getUint16(28, true);
+
+      const fileNameAndExtraFieldRaw = await partialReader.readAmountStrict(
+        fileNameLength + extraFieldLength,
+      );
       const fileName = textDecoder.decode(
-        await partialReader.readAmountStrict(fileNameLength),
+        fileNameAndExtraFieldRaw.subarray(0, fileNameLength),
       );
 
       let type: ReadEntry["type"] | undefined;
@@ -119,10 +123,9 @@ export async function* read(
         type = "file";
       }
 
-      const extraFieldRaw = await partialReader.readAmountStrict(
-        extraFieldLength,
+      const parsedExtraFields = parseExtraField(
+        fileNameAndExtraFieldRaw.subarray(fileNameLength),
       );
-      const parsedExtraFields = parseExtraField(extraFieldRaw);
 
       if (parsedExtraFields.zip64) {
         compressedSize = parsedExtraFields.zip64.compressedSize;
